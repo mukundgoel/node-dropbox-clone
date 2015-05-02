@@ -29,7 +29,17 @@ app.get('*', (req, res, next) => {
 			return
 		}
 
-		fs.promise.stat(filePath)
+		// stat by itself is a core callback (and they expect callbacks, which we don't want to use)
+		// so we will use a promise instead and we will get a promise back
+		let stat = await fs.promise.stat(filePath)
+		if (stat.isDirectory()) {
+			let files = await fs.promise.readdir(filePath)
+
+			// auto return the json file and all the corresponding headers
+			res.json(files)
+
+			return
+		}
 
 		fs.createReadStream(filePath).pipe(res)
 	}().catch(next)
