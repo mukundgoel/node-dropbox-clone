@@ -37,6 +37,22 @@ app.get('*', setFileMeta, sendHeaders, (req, res) => {
 // since we have set the headers we have nothing else to do on the HEAD call
 app.head('*', setFileMeta, sendHeaders, (req, res) => res.end())
 
+// here we do not use nodeify since we want to call next only if there is an error
+app.delete('*', setFileMeta, (req, res, next) => {
+	async()=> {
+		if (!req.stat) return res.send(400, 'Invalid Path')
+
+		if (req.stat.isDirectory()) {
+			await 	rimraf.promise(req.filePath)
+		} else {
+			await fs.promise.unlink(req.filePath)
+		}
+		res.end()
+	}().catch(next)
+})
+
+// Middleware logic is below
+
 function setFileMeta(req, res, next) {
 	req.filePath = path.resolve(path.join(ROOT_DIR, req.url))
 	if (req.filePath.indexOf(ROOT_DIR) !== 0) {
@@ -72,17 +88,3 @@ function sendHeaders(req, res, next) {
 
 	}(), next)
 }
-
-// here we do not use nodeify since we want to call next only if there is an error
-app.delete('*', setFileMeta, (req, res, next) => {
-	async()=> {
-		if (!req.stat) return res.send(400, 'Invalid Path')
-
-		if (req.stat.isDirectory()) {
-			await 	rimraf.promise(req.filePath)
-		} else {
-			await fs.promise.unlink(req.filePath)
-		}
-		res.end()
-	}().catch(next)
-})
