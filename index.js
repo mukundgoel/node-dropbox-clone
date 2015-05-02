@@ -22,7 +22,7 @@ if (NODE_ENV === 'development') {
 // note here need to use ` instead of " if we want to use {PORT}
 app.listen(PORT, ()=> console.log(`LISTENING @ http://127.0.0.1:${PORT}`))
 
-app.get('*', sendHeaders, (req, res) => {
+app.get('*', setFileMeta, sendHeaders, (req, res) => {
 	// we need to check if it is a directory but we did that in setHeaders call already and have set the body
 	// so we can just reuse that body and return it back to the caller
 	if (res.body) {
@@ -34,22 +34,27 @@ app.get('*', sendHeaders, (req, res) => {
 })
 
 // since we have set the headers we have nothing else to do on the HEAD call
-app.head('*', sendHeaders, (req, res) => res.end())
+app.head('*', setFileMeta, sendHeaders, (req, res) => res.end())
+
+function setFileMeta(req, res, next) {
+	req.filePath = path.resolve(path.join(ROOT_DIR, req.url))
+	if (filePath.indexOf(ROOT_DIR) !== 0) {
+		res.send(400, 'Invalid path')
+		return
+	}
+	fs.promise.stat(filePath)
+		.then(stat => req.stat = stat)
+		.nodeify(next)
+}
 
 function sendHeaders(req, res, next) {
-	nodeify(async() => {
-		let filePath = path.resolve(path.join(ROOT_DIR, req.url))
-		req.filePath = filePath
-		if (filePath.indexOf(ROOT_DIR) !== 0) {
-			res.send(400, 'Invalid path')
-			return
-		}
 
+	// we are not using .catch() because we wanted to call next whether it succeed or failed
+	nodeify(async() => {
 		// stat by itself is a core callback (and they expect callbacks, which we don't want to use)
 		// so we will use a promise instead and we will get a promise back
-		let stat = await fs.promise.stat(filePath)
-		if (stat.isDirectory()) {
-			let files = await fs.promise.readdir(filePath)
+		if (req.stat.isDirectory()) {
+			let files = await fs.promise.readdir(req.filePath)
 
 			// auto return the json file and all the corresponding headers
 			// JSON is an expensive operation in Node, so we want to do it only once
@@ -59,10 +64,17 @@ function sendHeaders(req, res, next) {
 			return
 		}
 
-		res.setHeader('Content-Length', JSON.stringify(stat.size))
+		res.setHeader('Content-Length', JSON.stringify(req.stat.size))
 
-		let contentType = mime.contentType(path.extname(filePath))
+		let contentType = mime.contentType(path.extname(req.filePath))
 		res.setHeader('Content-Type', contentType)
 
 	}(), next)
 }
+
+// here we do not use nodeify since we want to call next only if there is an error
+app.delete('*', setFileMeta, (req, res, next) => {
+	async()=> {
+		if (req.stat.isDirectory())
+	}().catch(next)
+})
