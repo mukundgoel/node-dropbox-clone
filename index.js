@@ -5,6 +5,7 @@ let morgan = require('morgan')
 let nodeify = require('bluebird-nodeify')
 let mime = require('mime-types')
 let rimraf = require('rimraf')
+let mkdirp = require('mkdirp')
 
 require('songbird')
 
@@ -51,7 +52,28 @@ app.delete('*', setFileMeta, (req, res, next) => {
 	}().catch(next)
 })
 
+app.put('*', setFileMeta, setDirDetails, (req, res, next) => {
+	async ()=> {
+		await mkdirp.promise(req.dirPath)
+		if (!req.isDir) {
+			req.pipe(fs.createWriteStream(req.filePath))
+		}
+		res.end()
+	}().catch(next)
+})
+
 // Middleware logic is below
+
+function setDirDetails(req, res, next) {
+	if (req.stat) return res.send(405, 'File exists')
+
+	let filePath = req.filePath
+	let endsWithSlash = filePath.charAt(filePath.length-1) === path.sep
+	let hasExt = path.extname(filePath) !== ''
+	req.isDir = endsWithSlash || !hasExt
+	req.dirPath = req.isDir ? filePath : path.dirname(filePath)
+	next()
+}
 
 function setFileMeta(req, res, next) {
 	req.filePath = path.resolve(path.join(ROOT_DIR, req.url))
