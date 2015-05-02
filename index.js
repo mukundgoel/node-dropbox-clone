@@ -3,6 +3,7 @@ let path = require('path')
 let express = require('express')
 let morgan = require('morgan')
 let nodeify = require('bluebird-nodeify')
+let mime = require('mime-types')
 
 require('songbird')
 
@@ -21,9 +22,24 @@ if (NODE_ENV === 'development') {
 // note here need to use ` instead of " if we want to use {PORT}
 app.listen(PORT, ()=> console.log(`LISTENING @ http://127.0.0.1:${PORT}`))
 
-app.get('*', (req, res, next) => {
-	async() => {
+app.get('*', sendHeaders, (req, res) => {
+	// we need to check if it is a directory but we did that in setHeaders call already and have set the body
+	// so we can just reuse that body and return it back to the caller
+	if (res.body) {
+		res.json(res.body)
+		return
+	}
+
+	fs.createReadStream(req.filePath).pipe(res)
+})
+
+// since we have set the headers we have nothing else to do on the HEAD call
+app.head('*', sendHeaders, (req, res) => res.end())
+
+function sendHeaders(req, res, next) {
+	nodeify(async() => {
 		let filePath = path.resolve(path.join(ROOT_DIR, req.url))
+		req.filePath = filePath
 		if (filePath.indexOf(ROOT_DIR) !== 0) {
 			res.send(400, 'Invalid path')
 			return
@@ -36,11 +52,17 @@ app.get('*', (req, res, next) => {
 			let files = await fs.promise.readdir(filePath)
 
 			// auto return the json file and all the corresponding headers
-			res.json(files)
-
+			// JSON is an expensive operation in Node, so we want to do it only once
+			res.body = JSON.stringify(files)
+			res.setHeader('Content-Length', JSON.stringify(res.body.length))
+			res.setHeader('Content-Type', 'application/json')
 			return
 		}
 
-		fs.createReadStream(filePath).pipe(res)
-	}().catch(next)
-})
+		res.setHeader('Content-Length', JSON.stringify(stat.size))
+
+		let contentType = mime.contentType(path.extname(filePath))
+		res.setHeader('Content-Type', contentType)
+
+	}(), next)
+}
