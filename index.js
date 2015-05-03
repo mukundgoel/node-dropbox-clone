@@ -6,12 +6,22 @@ let nodeify = require('bluebird-nodeify')
 let mime = require('mime-types')
 let rimraf = require('rimraf')
 let mkdirp = require('mkdirp')
+let argv = require('yargs')
+  .help('h')
+  .alias('h', 'help')
+  .describe('dir', 'Root directory to store files')
+  .usage('Usage: bode $0 <command> [options]')
+  .example('bode $0 --log /tmp/proxy.log')
+  .epilog('Thanks to CodePath and @WalmartLabs for Node.JS!')
+  .argv
 
 require('songbird')
 
+console.log(`We have as DIR: ${argv.dir}`)
+
 const NODE_ENV = process.env.NODE_ENV
 const PORT = process.env.PORT || 8000
-const ROOT_DIR = path.resolve(process.cwd())
+const ROOT_DIR = argv.dir || path.resolve(process.cwd())
 
 let app = express()
 
@@ -44,7 +54,7 @@ app.delete('*', setFileMeta, (req, res, next) => {
 		if (!req.stat) return res.send(400, 'Invalid Path')
 
 		if (req.stat.isDirectory()) {
-			await 	rimraf.promise(req.filePath)
+			await rimraf.promise(req.filePath)
 		} else {
 			await fs.promise.unlink(req.filePath)
 		}
@@ -66,7 +76,7 @@ app.put('*', setFileMeta, setDirDetails, (req, res, next) => {
 app.post('*', setFileMeta, setDirDetails, (req, res, next) => {
 	async ()=> {
 		if (!req.stat) return res.send(405, 'File does not exist')
-		if (req.isDir) return res.send(405, 'Path is a directory')	
+		if (req.isDir) return res.send(405, 'Path is a directory')
 
 		await fs.promise.truncate(req.filePath, 0)
 		req.pipe(fs.createWriteStream(req.filePath))
