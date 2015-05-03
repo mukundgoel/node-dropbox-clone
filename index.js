@@ -11,7 +11,7 @@ let argv = require('yargs')
   .alias('h', 'help')
   .describe('dir', 'Root directory to store files')
   .usage('Usage: bode $0 <command> [options]')
-  .example('bode $0 --log /tmp/proxy.log')
+  .example('bode $0 --dir /app/dropbox')
   .epilog('Thanks to CodePath and @WalmartLabs for Node.JS!')
   .argv
 
