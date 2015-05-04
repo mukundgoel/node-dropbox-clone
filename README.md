@@ -4,6 +4,14 @@ A basic Dropbox clone created as part of Codepath's Node.JS Bootcamp
 
 #####Time spent: 12 hours#####
 
+> In another terminal:<br />
+>   For TCP Sync: simply run `bode client.js`<br />
+>   For HTTP Sync: simply send a curl command such as:<br />
+>     GET: `curl -v http://127.0.0.1:8000/foo2.js -X GET`<br />
+>     POST: `curl -v http://127.0.0.1:8000/foo2.js -X POST -d "data"`<br />
+>     PUT: `curl -v http://127.0.0.1:8000/foo2.js -X PUT -d "data"`<br />
+>     DELETE: `curl -v http://127.0.0.1:8000/foo2.js -X DELETE`<br />
+
 ###Required Features:###
 - [x] Client can make GET requests to get file or directory contents
 ![get](https://cloud.githubusercontent.com/assets/10262447/7460712/022dea6c-f25a-11e4-8677-56bf781a3ce9.gif)
