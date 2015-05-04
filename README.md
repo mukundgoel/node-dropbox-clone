@@ -21,6 +21,6 @@ Required Features:
 ![delete](https://cloud.githubusercontent.com/assets/10262447/7460711/022ce432-f25a-11e4-865f-0c84c20c8662.gif)
 
 - [x] Server will serve from --dir or cwd as root
-
+![dir](https://cloud.githubusercontent.com/assets/10262447/7460920/64b9b0c0-f25b-11e4-9b60-b3484d7569a1.gif)
 
 - [x] Client will sync from server over TCP to cwd or CLI dir argument
