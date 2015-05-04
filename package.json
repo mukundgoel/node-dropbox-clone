@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "NODE_ENV=development nodemon --exec babel-node -- --stage 1 --optional strict -- index.js",
+    "start": "nodemon --exec babel-node -- --stage 1 --optional strict -- server.js",
+    "start client": "nodemon --exec babel-node -- --stage 1 --optional strict -- client.js",
+    "start server": "nodemon --exec babel-node -- --stage 1 --optional strict -- server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",

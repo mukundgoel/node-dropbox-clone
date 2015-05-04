@@ -4,8 +4,18 @@
 let jot = require('json-over-tcp')
 let fs = require('fs')
 
+// argv imports for help
+let argv = require('yargs')
+  .help('h')
+  .alias('h', 'help')
+  .describe('dir', 'Root directory to store files')
+  .usage('Usage: bode $0 <command> [options]')
+  .example('bode $0 --dir /app/dropbox')
+  .epilog('Thanks to CodePath and @WalmartLabs for Node.JS!')
+  .argv
+
 let SERVER_CONNECTION_PORT = 8099
-let ROOT_DIR = "/app/testing"
+let ROOT_DIR = argv.dir || "/app/testing"
 
 // Creates one connection to the server when the server starts listening
 function createConnection() {
