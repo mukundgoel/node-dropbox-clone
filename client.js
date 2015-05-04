@@ -3,6 +3,7 @@
 
 let jot = require('json-over-tcp')
 let fs = require('fs')
+let path = require('path')
 
 // argv imports for help
 let argv = require('yargs')
@@ -15,7 +16,7 @@ let argv = require('yargs')
   .argv
 
 let SERVER_CONNECTION_PORT = 8099
-let ROOT_DIR = argv.dir || "/app/testing"
+let ROOT_DIR = argv.dir || path.resolve(process.cwd())
 
 // Creates one connection to the server when the server starts listening
 function createConnection() {
@@ -31,16 +32,16 @@ function createConnection() {
   socket.on('data', async(data) => {
     // Output the answer property of the server's message to the console
     if (data.type === 'dir') {
-		if (data.action === "create") {
-			await fs.mkdir(ROOT_DIR + data.path)
-			console.log("Created directory " + data.path)
-		}
+      if (data.action === "create") {
+        await fs.mkdir(ROOT_DIR + data.path)
+        console.log("Created directory " + data.path)
+      }
 	} else {
-		if (data.action === "create") {
-			let buffer = await new Buffer(data.contents, 'base64')
-			await fs.writeFile(ROOT_DIR + data.path, buffer)
-			console.log("Created file " + data.path)
-		}
+      if (data.action === "create") {
+        let buffer = await new Buffer(data.contents, 'base64')
+        await fs.writeFile(ROOT_DIR + data.path, buffer)
+        console.log("Created file " + data.path)
+      }
 	}
   })
 }

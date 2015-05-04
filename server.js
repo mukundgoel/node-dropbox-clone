@@ -118,6 +118,7 @@ function setDirDetails(req, res, next) {
 
 function setFileMeta(req, res, next) {
 	req.filePath = path.resolve(path.join(ROOT_DIR, req.url))
+
 	if (req.filePath.indexOf(ROOT_DIR) !== 0) {
 		res.send(400, 'Invalid path')
 		return
@@ -133,7 +134,8 @@ function sendHeaders(req, res, next) {
 	nodeify(async() => {
 		// stat by itself is a core callback (and they expect callbacks, which we don't want to use)
 		// so we will use a promise instead and we will get a promise back
-		if (req.stat.isDirectory()) {
+
+		if (req.stat && req.stat.isDirectory()) {
 			let files = await fs.promise.readdir(req.filePath)
 
 			// auto return the json file and all the corresponding headers
