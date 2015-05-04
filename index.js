@@ -153,21 +153,40 @@ function sendHeaders(req, res, next) {
 	}(), next)
 }
 
-async function ls(dirPath) {
+async function ls(dirPath, socket) {
   let files = await fs.promise.readdir(dirPath)
   let newFile = []
   let promises = []
   for (let file of files) {
     let stat = await fs.promise.stat(dirPath + "/" + file)
+
+	let filePathFromRoot = dirPath + "/" + file
+		filePathFromRoot = filePathFromRoot.split(ROOT_DIR, 2)
+		filePathFromRoot = filePathFromRoot[1]
+
     if (stat.isFile()) {
-      newFile.push(dirPath + "/" + file)
+		socket.write({
+			"action": "create",
+			"path": filePathFromRoot,
+			"type": "file",
+			"contents": null,
+			"updated": 1427851834642
+			})
+      //newFile.push(dirPath + "/" + file)
     } else {
-      promises.push(ls(dirPath + "/" + file))
+		socket.write({
+			"action": "create",
+			"path": filePathFromRoot,
+			"type": "dir",
+			"contents": null,
+			"updated": 1427851834642
+			})
+      promises.push(ls(dirPath + "/" + file, socket))
     }
 
   }
-  let results = await Promise.all(promises)
 
+  let results = await Promise.all(promises)
   return _.flatten(newFile.concat(results), true)
 }
 
@@ -177,17 +196,9 @@ async function newConnectionHandler(socket) {
   socket.on('data', function(data) {
     // Output the question property of the client's message to the console
     console.log("Client's question: " + data.question)
-	ls(__dirname).then(files => {
-
-	for (let file in files) {
-		socket.write({
-			"action": "create",
-			"path": files[file],
-			"type": "dir",
-			"contents": null,
-			"updated": 1427851834642
-			})
-	}
-	}).catch(e => console.log(e.stack))
+    console.log("__dirname is set to: " + path.join(__dirname))
+	ls(ROOT_DIR, socket).then(
+		console.log("Sent requested files to caller....")
+	).catch(e => console.log(e.stack))
   })
 }

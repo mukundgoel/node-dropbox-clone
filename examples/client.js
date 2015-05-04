@@ -17,7 +17,11 @@ function createConnection() {
   // Whenever the server sends us an object...
   socket.on('data', function(data) {
     // Output the answer property of the server's message to the console
-    console.log("File sent: " + data.path)
+    if (data.type === 'dir') {
+		console.log("Directory sent: " + data.path)
+	} else {
+		console.log("File sent: " + data.path)
+	}
   })
 }
 
