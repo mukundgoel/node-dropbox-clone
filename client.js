@@ -4,6 +4,8 @@
 let jot = require('json-over-tcp')
 let fs = require('fs')
 let path = require('path')
+let rimraf = require('rimraf')
+let mkdirp = require('mkdirp')
 
 // argv imports for help
 let argv = require('yargs')
@@ -36,11 +38,26 @@ function createConnection() {
         await fs.mkdir(ROOT_DIR + data.path)
         console.log("Created directory " + data.path)
       }
+      else if (data.type === "delete") {
+        console.log("Deleted directory " + ROOT_DIR + data.path)
+        await rimraf.promise(ROOT_DIR + data.path)
+      }
 	} else {
       if (data.action === "create") {
-        let buffer = await new Buffer(data.contents, 'base64')
+        console.log("Created file " + ROOT_DIR + data.path)
+        let buffer = new Buffer(data.contents, 'base64')
+        await mkdirp.promise(path.dirname(path.join(ROOT_DIR, data.path)))
         await fs.writeFile(ROOT_DIR + data.path, buffer)
-        console.log("Created file " + data.path)
+      }
+      else if (data.action === "delete") {
+        console.log("Deleted file " + ROOT_DIR + data.path)
+        await fs.promise.unlink(ROOT_DIR + data.path)
+      }
+      else if (data.action === "update") {
+        console.log("Updated file " + ROOT_DIR + data.path)
+        let buffer = new Buffer(data.contents, 'base64')
+        await fs.promise.truncate(ROOT_DIR + data.path, 0)
+        await fs.writeFile(ROOT_DIR + data.path, buffer)
       }
 	}
   })

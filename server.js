@@ -21,6 +21,8 @@ let TCP_LISTENING_PORT = 8099
 let server = jot.createServer(TCP_LISTENING_PORT)
 server.on('connection', newConnectionHandler)
 
+let CLIENT_SOCKET
+
 // Start listening
 console.log(`TCP sync server listening at 127.0.0.1:${TCP_LISTENING_PORT}`)
 server.listen(TCP_LISTENING_PORT)
@@ -75,8 +77,28 @@ app.delete('*', setFileMeta, (req, res, next) => {
 
 		if (req.stat.isDirectory()) {
 			await rimraf.promise(req.filePath)
+			if (CLIENT_SOCKET)
+			{
+				await CLIENT_SOCKET.write({
+					"action": "delete",
+					"path": req.url,
+					"type": "dir",
+					"contents": null,
+					"updated": null
+				})
+			}
 		} else {
 			await fs.promise.unlink(req.filePath)
+			if (CLIENT_SOCKET)
+			{
+				await CLIENT_SOCKET.write({
+					"action": "delete",
+					"path": req.url,
+					"type": "file",
+					"contents": null,
+					"updated": null
+				})
+			}
 		}
 		res.end()
 	}().catch(next)
@@ -88,6 +110,17 @@ app.put('*', setFileMeta, setDirDetails, (req, res, next) => {
 		await mkdirp.promise(req.dirPath)
 		if (!req.isDir) {
 			req.pipe(fs.createWriteStream(req.filePath))
+			if (CLIENT_SOCKET)
+			{
+				let buffer = await fs.promise.readFile(req.filePath)
+				await CLIENT_SOCKET.write({
+					"action": "create",
+					"path": req.url,
+					"type": "file",
+					"contents": buffer.toString("base64"),
+					"updated": null
+				})
+			}
 		}
 		res.end()
 	}().catch(next)
@@ -100,10 +133,21 @@ app.post('*', setFileMeta, setDirDetails, (req, res, next) => {
 
 		await fs.promise.truncate(req.filePath, 0)
 		req.pipe(fs.createWriteStream(req.filePath))
+
+		if (CLIENT_SOCKET)
+		{
+			let buffer = await fs.promise.readFile(req.filePath)
+			await CLIENT_SOCKET.write({
+				"action": "update",
+				"path": req.url,
+				"type": "file",
+				"contents": buffer.toString("base64"),
+				"updated": null
+			})
+		}
 		res.end()
 	}().catch(next)
 })
-
 
 // Middleware logic is below
 
@@ -192,6 +236,8 @@ async function ls(dirPath, socket) {
 
 // Triggered whenever something connects to the server
 async function newConnectionHandler(socket) {
+	CLIENT_SOCKET = socket
+
   // Whenever a connection sends us an object...
   socket.on('data', function(data) {
     // Output the question property of the client's message to the console
