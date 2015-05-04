@@ -1,5 +1,3 @@
-// This script will output "Client's question: Hello, world?" and "Server's answer: 42" in alternating order
-// every second until the script is stopped.
 
 let jot = require('json-over-tcp')
 let someRandomPort = 8099

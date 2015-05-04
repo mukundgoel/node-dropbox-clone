@@ -3,6 +3,8 @@
 // server will listen to a port for client requests
 // for each present in a directory send the contents back to the caller using the JSON API
 
+
+// imports for the regular HTTP Express project
 let fs = require('fs')
 let path = require('path')
 let express = require('express')
@@ -11,6 +13,20 @@ let nodeify = require('bluebird-nodeify')
 let mime = require('mime-types')
 let rimraf = require('rimraf')
 let mkdirp = require('mkdirp')
+
+// imports for the TCP Sync section
+let jot = require('json-over-tcp')
+let _ = require('lodash')
+
+let TCP_LISTENING_PORT = 8099
+let server = jot.createServer(TCP_LISTENING_PORT)
+server.on('connection', newConnectionHandler)
+
+// Start listening
+console.log("Listening at 127.0.0.1:"+TCP_LISTENING_PORT)
+server.listen(TCP_LISTENING_PORT)
+
+// argv imports for help
 let argv = require('yargs')
   .help('h')
   .alias('h', 'help')
@@ -20,11 +36,10 @@ let argv = require('yargs')
   .epilog('Thanks to CodePath and @WalmartLabs for Node.JS!')
   .argv
 
+// Promise API
 require('songbird')
 
-console.log(`We have as DIR: ${argv.dir}`)
-
-const NODE_ENV = process.env.NODE_ENV
+const NODE_ENV = process.env.NODE_ENV || 'development'
 const PORT = process.env.PORT || 8000
 const ROOT_DIR = argv.dir || path.resolve(process.cwd())
 
@@ -32,6 +47,7 @@ let app = express()
 
 // run through Morgan middleware first BEFORE app.get call
 // move this below app.get if you want it to run AFTER app.get call
+console.log("Node Environment set to: " + NODE_ENV)
 if (NODE_ENV === 'development') {
 	app.use(morgan('dev'))
 }
@@ -135,4 +151,43 @@ function sendHeaders(req, res, next) {
 		res.setHeader('Content-Type', contentType)
 
 	}(), next)
+}
+
+async function ls(dirPath) {
+  let files = await fs.promise.readdir(dirPath)
+  let newFile = []
+  let promises = []
+  for (let file of files) {
+    let stat = await fs.promise.stat(dirPath + "/" + file)
+    if (stat.isFile()) {
+      newFile.push(dirPath + "/" + file)
+    } else {
+      promises.push(ls(dirPath + "/" + file))
+    }
+
+  }
+  let results = await Promise.all(promises)
+
+  return _.flatten(newFile.concat(results), true)
+}
+
+// Triggered whenever something connects to the server
+async function newConnectionHandler(socket) {
+  // Whenever a connection sends us an object...
+  socket.on('data', function(data) {
+    // Output the question property of the client's message to the console
+    console.log("Client's question: " + data.question)
+	ls(__dirname).then(files => {
+
+	for (let file in files) {
+		socket.write({
+			"action": "create",
+			"path": files[file],
+			"type": "dir",
+			"contents": null,
+			"updated": 1427851834642
+			})
+	}
+	}).catch(e => console.log(e.stack))
+  })
 }
