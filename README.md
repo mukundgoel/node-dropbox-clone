@@ -24,4 +24,8 @@ Required Features:
 ![dir](https://cloud.githubusercontent.com/assets/10262447/7460920/64b9b0c0-f25b-11e4-9b60-b3484d7569a1.gif)
 
 - [x] Client will sync from server over TCP to cwd or CLI dir argument
+![tcp_client](https://cloud.githubusercontent.com/assets/10262447/7464790/f632a236-f27a-11e4-92cc-d83956a8687d.gif)
+
+##Additional Feature##
+- [x] Download initial directory contents when TCP client connects to server
 ![client](https://cloud.githubusercontent.com/assets/10262447/7461412/efab643c-f25e-11e4-82ae-dd3076ab62d8.gif)
