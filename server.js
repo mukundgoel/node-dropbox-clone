@@ -22,7 +22,7 @@ let server = jot.createServer(TCP_LISTENING_PORT)
 server.on('connection', newConnectionHandler)
 
 // Start listening
-console.log("Listening at 127.0.0.1:"+TCP_LISTENING_PORT)
+console.log(`TCP sync server listening at 127.0.0.1:${TCP_LISTENING_PORT}`)
 server.listen(TCP_LISTENING_PORT)
 
 // argv imports for help
@@ -52,7 +52,7 @@ if (NODE_ENV === 'development') {
 }
 
 // note here need to use ` instead of " if we want to use {PORT}
-app.listen(PORT, ()=> console.log(`LISTENING @ http://127.0.0.1:${PORT}`))
+app.listen(PORT, ()=> console.log(`HTTP server listening at http://127.0.0.1:${PORT}`))
 
 app.get('*', setFileMeta, sendHeaders, (req, res) => {
 	// we need to check if it is a directory but we did that in setHeaders call already and have set the body
