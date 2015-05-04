@@ -17,7 +17,7 @@ function createConnection() {
   // Whenever the server sends us an object...
   socket.on('data', function(data) {
     // Output the answer property of the server's message to the console
-    console.log("Server's answer: " + data.path)
+    console.log("File sent: " + data.path)
   })
 }
 
