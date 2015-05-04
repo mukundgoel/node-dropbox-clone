@@ -3,7 +3,6 @@
 // server will listen to a port for client requests
 // for each present in a directory send the contents back to the caller using the JSON API
 
-
 // imports for the regular HTTP Express project
 let fs = require('fs')
 let path = require('path')
@@ -165,25 +164,24 @@ async function ls(dirPath, socket) {
 		filePathFromRoot = filePathFromRoot[1]
 
     if (stat.isFile()) {
-		socket.write({
+		let buffer = await fs.promise.readFile(dirPath + "/" + file)
+		await socket.write({
 			"action": "create",
 			"path": filePathFromRoot,
 			"type": "file",
-			"contents": null,
-			"updated": 1427851834642
+			"contents": buffer.toString("base64"),
+			"updated": stat.mtime
 			})
-      //newFile.push(dirPath + "/" + file)
     } else {
-		socket.write({
+		await socket.write({
 			"action": "create",
 			"path": filePathFromRoot,
 			"type": "dir",
 			"contents": null,
-			"updated": 1427851834642
+			"updated": stat.mtime
 			})
-      promises.push(ls(dirPath + "/" + file, socket))
+      await promises.push(ls(dirPath + "/" + file, socket))
     }
-
   }
 
   let results = await Promise.all(promises)
@@ -197,7 +195,7 @@ async function newConnectionHandler(socket) {
     // Output the question property of the client's message to the console
     console.log("Client's question: " + data.question)
     console.log("__dirname is set to: " + path.join(__dirname))
-	ls(ROOT_DIR, socket).then(
+	ls(ROOT_DIR, socket).then(() =>
 		console.log("Sent requested files to caller....")
 	).catch(e => console.log(e.stack))
   })

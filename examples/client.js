@@ -18,9 +18,9 @@ function createConnection() {
   socket.on('data', function(data) {
     // Output the answer property of the server's message to the console
     if (data.type === 'dir') {
-		console.log("Directory sent: " + data.path)
+		console.log("Directory sent: " + data.path + " with date of " + data.updated)
 	} else {
-		console.log("File sent: " + data.path)
+		console.log("File sent: " + data.path + " with date of " + data.updated + "\n" + data.contents)
 	}
   })
 }
