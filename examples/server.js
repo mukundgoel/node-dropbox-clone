@@ -1,29 +1,31 @@
-let net = require('net'),
-    JsonSocket = require('json-socket')
+// This script will output "Client's question: Hello, world?" and "Server's answer: 42" in alternating order
+// every second until the script is stopped.
 
-let port = 9838
-let server = net.createServer()
-server.listen(port)
-server.on('connection', function(socket) {
-    socket = new JsonSocket(socket)
-    let n
-    let isRunning = false
-    let streamInterval
-    socket.on('message', function(message) {
-        if (message.command === 'start') {
-            if (!isRunning) {
-                n = message.beginAt || 1
-                isRunning = true
-                streamInterval = setInterval(function() {
-                    socket.sendMessage(n * n)
-                    n++
-                }, 1000)
-            }
-        } else if (message.command === 'stop') {
-            if (isRunning) {
-                isRunning = false
-                clearInterval(streamInterval)
-            }
-        }
+let jot = require('json-over-tcp')
+let someRandomPort = 8099
+let server = jot.createServer(someRandomPort)
+server.on('connection', newConnectionHandler)
+
+// Triggered whenever something connects to the server
+function newConnectionHandler(socket) {
+  // Whenever a connection sends us an object...
+  socket.on('data', function(data) {
+    // Output the question property of the client's message to the console
+    console.log("Client's question: " + data.question)
+
+    // Wait one second, then write an answer to the client's socket
+    setTimeout(function() {
+      socket.write({
+        "action": "create",                        // "update" or "delete"
+        "path": "/path/to/file/from/root",
+        "type": "dir",                            // or "file"
+        "contents": null,                            // or the base64 encoded file contents
+        "updated": 1427851834642                    // time of creation/deletion/update
     })
-})
+    }, 1000)
+  })
+}
+
+// Start listening
+console.log("Listening at 127.0.0.1:"+someRandomPort)
+server.listen(someRandomPort)

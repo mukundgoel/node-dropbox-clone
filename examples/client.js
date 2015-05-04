@@ -1,17 +1,34 @@
-let net = require('net'),
-    JsonSocket = require('json-socket')
+// This script will output "Client's question: Hello, world?" and "Server's answer: 42" in alternating order
+// every second until the script is stopped.
 
-let port = 9838 //The same port that the server is listening on
-let host = '127.0.0.1'
-let socket = new JsonSocket(new net.Socket()) //Decorate a standard net.Socket with JsonSocket
-socket.connect(port, host)
-socket.on('connect', function() { //Don't send until we're connected
-    socket.sendMessage({command: 'start', beginAt: 10})
-    socket.on('message', function(square) {
-        console.log(square)
-        if (square > 200) {
-            socket.sendMessage({command: 'stop'})
-            socket.end()
-        }
+let jot = require('json-over-tcp')
+let someRandomPort = 8099
+let server = jot.createServer(someRandomPort)
+server.on('listening', createConnection)
+
+// Creates one connection to the server when the server starts listening
+function createConnection() {
+  // Start a connection to the server
+  let socket = jot.connect(someRandomPort, function() {
+    // Send the initial message once connected
+    socket.write({
+      question: "Hello, world?"
     })
-})
+  })
+
+  // Whenever the server sends us an object...
+  socket.on('data', function(data) {
+    // Output the answer property of the server's message to the console
+    console.log("Server's answer: " + data.updated)
+
+    // Wait one second, then write a question to the socket
+    setTimeout(function() {
+      // Notice that we "write" a JSON object to the socket
+      socket.write({
+        question: "Hello, world?"
+      })
+    }, 1000)
+  })
+}
+
+createConnection()

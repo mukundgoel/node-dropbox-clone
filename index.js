@@ -1,3 +1,8 @@
+
+// This is for the server side portion of the Dropbox server
+// server will listen to a port for client requests
+// for each present in a directory send the contents back to the caller using the JSON API
+
 let fs = require('fs')
 let path = require('path')
 let express = require('express')
