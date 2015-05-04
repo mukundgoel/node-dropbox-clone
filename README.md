@@ -24,3 +24,4 @@ Required Features:
 ![dir](https://cloud.githubusercontent.com/assets/10262447/7460920/64b9b0c0-f25b-11e4-9b60-b3484d7569a1.gif)
 
 - [x] Client will sync from server over TCP to cwd or CLI dir argument
+![client](https://cloud.githubusercontent.com/assets/10262447/7461412/efab643c-f25e-11e4-82ae-dd3076ab62d8.gif)
