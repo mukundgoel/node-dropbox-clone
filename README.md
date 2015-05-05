@@ -8,10 +8,10 @@
 ######Time spent: 12 hours
 
 #### To Run:
-1. Run `bode server.js` in a terminal window (to start the server)
+1. Run `bode server.js` or `npm start` in a terminal window (to start the server)
 2. In another terminal:
-  1. For TCP Sync: simply run `bode client.js`
-  2. For HTTP Sync: simply send a supported HTTP command
+  1. For TCP Sync, simply run `bode client.js`
+  2. For HTTP Sync, simply send a supported HTTP command
   3. Or you can do both in different terminals!!
 
 (hint: you can also pass `--dir` param to set a directory in both the server and client)
