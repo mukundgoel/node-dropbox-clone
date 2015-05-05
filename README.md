@@ -14,6 +14,8 @@
   2. For HTTP Sync: simply send a supported HTTP command
   3. Or you can do both in different terminals!!
 
+(hint: you can also pass `--dir` param to set a directory in both the server and client)
+
 ######Supported HTTP commands:
 * GET *a file or directory*: `curl -v http://127.0.0.1:8000/foo2.js -X GET`
 
